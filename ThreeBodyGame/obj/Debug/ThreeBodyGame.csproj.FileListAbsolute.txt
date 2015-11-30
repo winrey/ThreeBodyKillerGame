@@ -1,0 +1,9 @@
+S:\编程\c#\自制\三体狼人杀\ThreeBodyGame\ThreeBodyGame\bin\Debug\ThreeBodyGame.exe.config
+S:\编程\c#\自制\三体狼人杀\ThreeBodyGame\ThreeBodyGame\bin\Debug\ThreeBodyGame.exe
+S:\编程\c#\自制\三体狼人杀\ThreeBodyGame\ThreeBodyGame\bin\Debug\ThreeBodyGame.pdb
+S:\编程\c#\自制\三体狼人杀\ThreeBodyGame\ThreeBodyGame\obj\Debug\ThreeBodyGame.csprojResolveAssemblyReference.cache
+S:\编程\c#\自制\三体狼人杀\ThreeBodyGame\ThreeBodyGame\obj\Debug\ThreeBodyGame.HostAssisant.resources
+S:\编程\c#\自制\三体狼人杀\ThreeBodyGame\ThreeBodyGame\obj\Debug\ThreeBodyGame.Properties.Resources.resources
+S:\编程\c#\自制\三体狼人杀\ThreeBodyGame\ThreeBodyGame\obj\Debug\ThreeBodyGame.csproj.GenerateResource.Cache
+S:\编程\c#\自制\三体狼人杀\ThreeBodyGame\ThreeBodyGame\obj\Debug\ThreeBodyGame.exe
+S:\编程\c#\自制\三体狼人杀\ThreeBodyGame\ThreeBodyGame\obj\Debug\ThreeBodyGame.pdb
