@@ -8,6 +8,7 @@ namespace ThreeBodyGame
 {
     public class Player
     {
+        private Director drirector;
 
         /// <summary>
         /// 该玩家拿到的角色
@@ -30,10 +31,31 @@ namespace ThreeBodyGame
             }
         }
         private string lastWords;
-        public Player(Character charachter)
+        /// <summary>
+        /// 初始化玩家类
+        /// </summary>
+        /// <param name="charachter">该玩家的角色。</param>
+        /// <param name="director">该场游戏的导演类。</param>
+        public Player(Character charachter, Director director)
         {
-
+            this.drirector = director;
+            this.PlayerCharater = charachter;
         }
+        /// <summary>
+        /// 某角色发出的命令。
+        /// </summary>
+        /// <param name="cmd"></param>
+        public void Commend(string cmd)
+        {
+            var com = from b in this.drirector.waitingList
+                      where b.PlayerToChat == this.PlayerCharater.CharacterName
+                      select b;
+            foreach(var b in com)
+            {
+                b.Commend(cmd);
+            }
+        }
+
         public class AlreadyHaveLastWords : Exception
         {
             public AlreadyHaveLastWords()

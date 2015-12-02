@@ -112,7 +112,7 @@ namespace ThreeBodyGame
         /// <param name="type">消息类型。</param>
         /// <param name="detail">消息细节内容。</param>
         /// <returns>生成的对象。</returns>
-        public static Notice CharacterNoticeFactory(int receiver, string contant, string type, Object detail)
+        public static Notice PlayerNoticeFactory(int receiver, string contant, string type, Object detail)
         {
             var n = new Notice();
             n.ReceiverType = ReceiverTypes.Player;
@@ -191,6 +191,7 @@ namespace ThreeBodyGame
 
             }
         }
+
         #endregion
     }
 }

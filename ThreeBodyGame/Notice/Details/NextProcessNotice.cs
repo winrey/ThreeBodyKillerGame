@@ -8,7 +8,6 @@ namespace ThreeBodyGame
 {
     public class NextProcessNotice
     {
-        public 
         public NextProcessNotice()
         {
 

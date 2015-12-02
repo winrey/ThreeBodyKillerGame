@@ -20,42 +20,85 @@ namespace ThreeBodyGame
         /// 被问询者。也仅有该人和刘慈欣有权限做出回答。刘慈欣回答一般是掉线等情况。
         /// </summary>
         public string PlayerToChat { get; private set; }
+        /// <summary>
+        /// 记录向用户首次发送的内容。为空则为不发送。
+        /// </summary>
         public string Contant { get; private set; }
+        /// <summary>
+        /// 记录/查询做出的选择。会检查选择是否有效。
+        /// </summary>
+        public string Choice
+        {
+            get
+            {
+                return choice;
+            }
+            set
+            {
+                if (Check(value) == false) throw new NoPermissionException();
+                choice = value;
+            }
+        }
+        private string choice;
         private Director director;
         public Behavior(Director gDirector)
         {
             director = gDirector;
         }
         /// <summary>
-        /// 处理信息的方法。会自动调用旗下相应方法。
+        /// 检查其中用使用存在某命令。
         /// </summary>
-        /// <param name="msg"></param>
-        public void Message(string msg)
+        /// <returns></returns>
+        public bool Check(string cmd)
         {
             //检测调用的是否为系统自带方法
-            foreach(MethodInfo mi in typeof(Behavior).GetMethods())
+            foreach (MethodInfo mi in typeof(Behavior).GetMethods())
             {
-                if (mi.Name == msg)
+                if (mi.Name == cmd)
                 {
-                    throw new NoPermissionException();
+                    return false;
                 }
             }
             try
             {
-                MethodInfo mi = this.GetType().GetMethod(msg);
+                MethodInfo mi = this.GetType().GetMethod(cmd);
                 //检查是否为公有方法
                 if (mi.IsPublic == false)
                 {
                     throw new NoPermissionException();
                 }
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+        /// <summary>
+        /// 处理信息的方法。会自动调用旗下相应方法。
+        /// </summary>
+        /// <param name="cmd"></param>
+        public void Commend(string cmd)
+        {
+            Choice = cmd;
+        }
+        /// <summary>
+        /// 执行做出的选择。
+        /// </summary>
+        public void Action()
+        {
+            try
+            {
+                MethodInfo mi = this.GetType().GetMethod(Choice);
+                //调用方法
                 mi.Invoke(this, null);
-                HasFinished = true;
+                //调用准销毁函数
+                Die();
             }
             catch
             {
                 throw;
             }
-            
         }
 
         public class NoPermissionException : Exception
@@ -72,6 +115,7 @@ namespace ThreeBodyGame
         /// </summary>
         public virtual void PreDo()
         {
+            if (Contant == "") return;
             director.SendToAll(Contant, "纯消息", PlayerToChat);
         }
         /// <summary>

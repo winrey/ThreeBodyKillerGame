@@ -46,7 +46,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Behavior\Notice\NextProcess.cs" />
     <Compile Include="Enum\Enums.cs" />
     <Compile Include="GameDirector\Director.cs" />
     <Compile Include="Behavior\Behavior.cs" />
@@ -93,6 +92,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Behavior\Character\逻辑\" />
+    <Folder Include="Behavior\Notice\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Notice\Notice种类说明.txt" />

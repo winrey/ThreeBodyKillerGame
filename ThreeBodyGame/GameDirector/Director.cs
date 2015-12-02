@@ -12,30 +12,7 @@ namespace ThreeBodyGame
     public class Director
     {
         #region 公有
-        /// <summary>
-        /// 现在游戏所处阶段。
-        /// 该属性变得会执行相应方法。
-        /// </summary>
-        public Process NowProcess
-        {
-            get
-            {
-                return nowProcess;
-            }
-            private set
-            {
-                nowProcess = value;
-                switch (NowProcess)
-                {
-                    case Process.Preparing: Preparing(); break;
-                    case Process.FirstDay: FirstDay(); break;
-                    case Process.FirstNight: FirstNight(); break;
-                    case Process.Day: Day(); break;
-                    case Process.Night: Night(); break;
-                    case Process.Ending: Ending();break;
-                }
-            }
-        }
+        
 
         public delegate void NoticedEventHandler(Object sender, NoticedEventArgs e);
         /// <summary>
@@ -51,6 +28,39 @@ namespace ThreeBodyGame
         #endregion
 
         #region 内部
+        /// <summary>
+        /// 现在游戏所处阶段。
+        /// 该属性变得会执行相应方法。
+        /// </summary>
+        internal Process NowProcess
+        {
+            get
+            {
+                return nowProcess;
+            }
+            private set
+            {
+                switch (NowProcess)
+                {
+                    case Process.Preparing: EndPreparing(); break;
+                    case Process.FirstDay: EndFirstDay(); break;
+                    case Process.FirstNight: EndFirstNight(); break;
+                    case Process.Day: EndDay(); break;
+                    case Process.Night: EndNight(); break;
+                    case Process.Ending: throw new CannotNextException();
+                }
+                nowProcess = value;
+                switch (NowProcess)
+                {
+                    case Process.Preparing: Preparing(); break;
+                    case Process.FirstDay: FirstDay(); break;
+                    case Process.FirstNight: FirstNight(); break;
+                    case Process.Day: Day(); break;
+                    case Process.Night: Night(); break;
+                    case Process.Ending: Ending(); break;
+                }
+            }
+        }
         internal Behavior waitingNow
         {
             get
@@ -81,26 +91,36 @@ namespace ThreeBodyGame
         #region 进程控制队列
         private void Preparing()
         {
+            
+        }
+
+        private void EndPreparing()
+        {
+
+        }
+
+        private void FirstDay()
+        {
             //添加刘慈欣到0号位占位
-            players.Add(new Player(CharacterFactory.刘慈欣()));
+            players.Add(new Player(CharacterFactory.刘慈欣(), this));
             #region 将string转换为对应角色
             List<string> ls = GameMode.GetCharacter();
-            List<Character> lc= new List<Character>();
+            List<Character> lc = new List<Character>();
             ls.ForEach(i => lc.Add(CharacterFactory.GetCharacter(i)));
             #endregion
             #region 将角色乱序，并分配给玩家
-            for(int i= Random.Next(lc.Count) ; lc.Count != 0; i = Random.Next(lc.Count))
+            for (int i = Random.Next(lc.Count); lc.Count != 0; i = Random.Next(lc.Count))
             {
-                players.Add(new Player(lc[i]));
+                players.Add(new Player(lc[i], this));
                 lc.RemoveAt(i);
             }
             #endregion
             #region 通知玩家身份以及顺序
             //生成通知内容
-            Noticed(this, new NoticedEventArgs(Notice.AllNoticeFactory("")));
+            throw new NotImplementedException();
             #endregion
         }
-        private void FirstDay()
+        private void EndFirstDay()
         {
 
         }
@@ -108,11 +128,24 @@ namespace ThreeBodyGame
         {
 
         }
+
+        private void EndFirstNight()
+        {
+
+        }
         private void Day()
         {
 
         }
+        private void EndDay()
+        {
+
+        }
         private void Night()
+        {
+
+        }
+        private void EndNight()
         {
 
         }
@@ -158,25 +191,84 @@ namespace ThreeBodyGame
         /// 输入键入的指令。
         /// </summary>
         /// <param name="msg">指令内容。</param>
-        public void Message(string msg)
+        /// <return>返回是否为可识别命令</return>
+        public bool Commend(string msg)
         {
             if (msg == "下一阶段")
             {
                 NextProcess();
+                return true;
             }
             if (msg == "Next")
             {
                 Next();
+                return true;
             }
             if (waitingNow != null){
-                waitingNow.Message(msg);
+                waitingNow.Commend(msg);
+                return true;
             }
+            if (msg.StartsWith("使用身份"))
+            {
+                //识别身份，命令用" "隔离
+                var msgs = msg.Split(' ');
+                var User = from a in players
+                           where a.PlayerCharater.CharacterName == msgs[1]
+                           select a;
+                foreach(var U in User)
+                {
+                    //删除第一个空格(含)前的所有内容
+                    //这里指“使用身份”命令
+                    msg = msg.Remove(0, msg.IndexOf(' '));
+                    //这里指角色名
+                    msg = msg.Remove(0, msg.IndexOf(' '));
+                    U.Commend(msg);
+                }
+                return true;
+            }
+            return false;
         }
 
         #region Send
-        public void SendToAll(string contant, string type, Object detail)
+        /// <summary>
+        /// 向某人/全员发送信息（通知）。
+        /// </summary>
+        /// <param name="contant">通知内容</param>
+        /// <param name="type">通知种类</param>
+        /// <param name="detail">通知对象</param>
+        /// <param name="receiver">接受者，如空则为全体消息。</param>
+        /// <param name="receiver">接受者的类型，默认为角色。</param>
+        public void SendTo(string contant, string type, Object detail, string receiver = null, 
+                         Notice.ReceiverTypes receiverType = Notice.ReceiverTypes.Charater)
         {
-            this.Noticed.Invoke(this, new Director.NoticedEventArgs(Notice.AllNoticeFactory(contant, type, detail)))
+            if(receiverType == Notice.ReceiverTypes.System)
+                this.Noticed.Invoke(this, new Director.NoticedEventArgs
+                    (Notice.SystemNoticeFactory(contant, type, detail)));
+
+            else if (receiver == null || receiverType == Notice.ReceiverTypes.All)
+                this.Noticed.Invoke(this, new Director.NoticedEventArgs
+                    (Notice.AllNoticeFactory(contant, type, detail)));
+
+            else if(receiverType == Notice.ReceiverTypes.Charater)
+                this.Noticed.Invoke(this, new Director.NoticedEventArgs
+                    (Notice.CharacterNoticeFactory(receiver, contant, type, detail)));
+
+            else if (receiverType == Notice.ReceiverTypes.Camp)
+                this.Noticed.Invoke(this, new Director.NoticedEventArgs
+                    (Notice.CampNoticeFactory(receiver, contant, type, detail)));
+
+            else if (receiverType == Notice.ReceiverTypes.Group)
+                this.Noticed.Invoke(this, new Director.NoticedEventArgs
+                    (Notice.GroupNoticeFactory(receiver, contant, type, detail)));
+
+            else if (receiverType == Notice.ReceiverTypes.Location)
+                this.Noticed.Invoke(this, new Director.NoticedEventArgs
+                    (Notice.LocationNoticeFactory(receiver, contant, type, detail)));
+
+            else if (receiverType == Notice.ReceiverTypes.Player)
+                this.Noticed.Invoke(this, new Director.NoticedEventArgs
+                    (Notice.PlayerNoticeFactory(int.Parse(receiver), contant, type, detail)));
+
         }
         #endregion
 
@@ -228,7 +320,10 @@ namespace ThreeBodyGame
 
         }
 
-        internal void
+        internal void ClearAllBehavior()
+        {
+            waitingList = new List<Behavior>();
+        }
         #endregion
 
         #region 异常
