@@ -48,7 +48,7 @@ namespace ThreeBodyGame
         public void Commend(string cmd)
         {
             var com = from b in this.drirector.waitingList
-                      where b.PlayerToChat == this.PlayerCharater.CharacterName
+                      where b.Receiver == this.PlayerCharater.CharacterName
                       select b;
             foreach(var b in com)
             {

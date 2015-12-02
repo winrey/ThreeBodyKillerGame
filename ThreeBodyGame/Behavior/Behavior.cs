@@ -13,13 +13,29 @@ namespace ThreeBodyGame
     public class Behavior
     {
         /// <summary>
-        /// 判断是否已经执行完成
+        /// 判断是否已经执行过。
         /// </summary>
-        public bool HasFinished { get; private set; }
+        public bool HasActioned { get; private set; }
+        /// <summary>
+        /// 判断是否已经被选择过。
+        /// </summary>
+        public bool HasChosen { get; private set; }
+        /// <summary>
+        /// 判断选择是否合法。
+        /// </summary>
+        public bool IsChoiceLegal
+        {
+            get
+            {
+                if (HasChosen) return true;
+                if (Check(DefaultChoice)) return true;
+                return false;
+            }
+        }
         /// <summary>
         /// 被问询者。也仅有该人和刘慈欣有权限做出回答。刘慈欣回答一般是掉线等情况。
         /// </summary>
-        public string PlayerToChat { get; private set; }
+        public string Receiver { get; private set; }
         /// <summary>
         /// 记录向用户首次发送的内容。为空则为不发送。
         /// </summary>
@@ -31,19 +47,30 @@ namespace ThreeBodyGame
         {
             get
             {
-                return choice;
+                if (HasChosen)
+                    return choice;
+                else if (Check(DefaultChoice))
+                    return DefaultChoice;
+                else throw new HaveNeverChosenException();
             }
             set
             {
                 if (Check(value) == false) throw new NoPermissionException();
+                HasChosen = true;
                 choice = value;
             }
         }
         private string choice;
+        /// <summary>
+        /// 如果没有选择就执行时默认的选择。如果没有选择且该项也非法会报错。
+        /// </summary>
+        public readonly string DefaultChoice;
         private Director director;
         public Behavior(Director gDirector)
         {
             director = gDirector;
+            HasActioned = false;
+            HasChosen = false;
         }
         /// <summary>
         /// 检查其中用使用存在某命令。
@@ -87,11 +114,21 @@ namespace ThreeBodyGame
         /// </summary>
         public void Action()
         {
+            if(IsChoiceLegal == false)
+            {
+                throw new HaveNeverChosenException();
+            }
+            if (HasActioned == true) throw new AlreadyFinishingException();
             try
             {
-                MethodInfo mi = this.GetType().GetMethod(Choice);
+                MethodInfo mi;
+                if (HasChosen)
+                    mi = this.GetType().GetMethod(Choice);
+                else
+                    mi = this.GetType().GetMethod(DefaultChoice);
                 //调用方法
                 mi.Invoke(this, null);
+                HasActioned = true;
                 //调用准销毁函数
                 Die();
             }
@@ -109,22 +146,46 @@ namespace ThreeBodyGame
 
             }
         }
+        public class AlreadyFinishingException : Exception
+        {
+            public AlreadyFinishingException()
+                : base("该行为已经曾经被执行！")
+            {
+
+            }
+        }
+        public class HaveNeverChosenException : Exception
+        {
+            public HaveNeverChosenException()
+                : base("该行为尚未进行选择默认赋值不合法！")
+            {
+
+            }
+        }
 
         /// <summary>
         /// 该方法在询问前做的事。默认为仅发送问询语。
         /// </summary>
-        public virtual void PreDo()
+        protected virtual void PreDo()
         {
             if (Contant == "") return;
-            director.SendToAll(Contant, "纯消息", PlayerToChat);
+            director.SendTo(Contant, "纯消息", null, Receiver);
         }
         /// <summary>
-        /// 行为执行完成后调用该方法
+        /// 该方法在Action后无论选择如何一定会完成的方法，手动销毁可选择是否完成该方法。如不覆写则为空。
         /// </summary>
-        protected void Die()
+        protected virtual void AfterDone()
         {
-            director.waitingList.Remove(this);
-            director.Next();
+
         }
+        /// <summary>
+        /// 行为执行完成后调用该方法。
+        /// </summary>
+        /// <param name="doAfterDone">选择是否销毁是否调用事后方法AfterDone</param>
+        protected void Die(bool doAfterDone = true)
+        {
+            if (doAfterDone) AfterDone();
+        }
+        
     }
 }

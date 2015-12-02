@@ -199,11 +199,11 @@ namespace ThreeBodyGame
                 NextProcess();
                 return true;
             }
-            if (msg == "Next")
-            {
-                Next();
-                return true;
-            }
+            //if (msg == "Next")
+            //{
+            //    Next();
+            //    return true;
+            //}
             if (waitingNow != null){
                 waitingNow.Commend(msg);
                 return true;
@@ -272,17 +272,13 @@ namespace ThreeBodyGame
         }
         #endregion
 
-        /// <summary>
-        /// 程序每个行为结束后都会调用该方法推进
-        /// </summary>
-        public void Next()
-        {
-            //如果队列为空，询问下一阶段
-            if (waitingList.Count == 0)
-            {
-
-            }
-        }
+        ///// <summary>
+        ///// 强制结束某该阶段。
+        ///// </summary>
+        //public void Next()
+        //{
+        //    throw new NotImplementedException();
+        //}
         public Process NextProcess()
         {
             //检测是否有未完成内容
