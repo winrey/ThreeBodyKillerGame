@@ -50,7 +50,7 @@
     <Compile Include="GameDirector\Director.cs" />
     <Compile Include="Behavior\Behavior.cs" />
     <Compile Include="GameDirector\IGetMessage.cs" />
-    <Compile Include="Notice\Details\NextProcessNotice.cs" />
+    <Compile Include="Notice\Details\ProcessNotice.cs" />
     <Compile Include="Notice\Details\-Detail模板.cs" />
     <Compile Include="Notice\Notice.cs" />
     <Compile Include="GameDirector\GameMode\GameMode.cs" />

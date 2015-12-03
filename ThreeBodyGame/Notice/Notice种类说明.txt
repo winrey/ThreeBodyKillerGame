@@ -13,7 +13,7 @@ Detail类型:无
 备注:无
 
 1
-Type名称:进入下一阶段
-Detail类型:NextProcessNotice
+Type名称:阶段变更通知
+Detail类型:ProcessNotice
 备注:无
 

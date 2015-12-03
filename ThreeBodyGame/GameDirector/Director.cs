@@ -12,7 +12,7 @@ namespace ThreeBodyGame
     public class Director
     {
         #region 公有
-        
+
 
         public delegate void NoticedEventHandler(Object sender, NoticedEventArgs e);
         /// <summary>
@@ -25,6 +25,25 @@ namespace ThreeBodyGame
         public GameMode GameMode { get; private set; }
 
         public Random Random { get; private set; }
+
+        /// <summary>
+        /// 游戏自开始后所有对外发送的消息。注意，得到的是原List的拷贝。
+        /// </summary>
+        public List<Notice> History {
+            get
+            {
+                return new List<Notice>(history.ToArray());
+            }
+            private set
+            {
+                history = value;
+            }
+        }
+
+        /// <summary>
+        /// 现在已经进行的回合数。
+        /// </summary>
+        public int Round { get; private set; }
         #endregion
 
         #region 内部
@@ -71,90 +90,34 @@ namespace ThreeBodyGame
                     return null;
             }
         }
+
+
         /// <summary>
         /// 等待执行的行为
         /// </summary>
         internal List<Behavior> waitingList = new List<Behavior>();
 
         /// <summary>
+        /// 一般于夜晚填写，白天统一发送的调用堆栈。
+        /// 用于发送夜晚各项活动的判定的结果。
+        /// </summary>
+        internal List<Notice> sendList = new List<Notice>();
+        
+            /// <summary>
         /// 所有玩家的总集，包括刘慈欣。刘慈欣角色为0号，其它游戏角色在其之后
         /// </summary>
         internal List<Player> players;
+
+
         #endregion
 
         #region 私有
 
         private Process nowProcess;
 
+        private List<Notice> history;
+
        
-
-        #region 进程控制队列
-        private void Preparing()
-        {
-            
-        }
-
-        private void EndPreparing()
-        {
-
-        }
-
-        private void FirstDay()
-        {
-            //添加刘慈欣到0号位占位
-            players.Add(new Player(CharacterFactory.刘慈欣(), this));
-            #region 将string转换为对应角色
-            List<string> ls = GameMode.GetCharacter();
-            List<Character> lc = new List<Character>();
-            ls.ForEach(i => lc.Add(CharacterFactory.GetCharacter(i)));
-            #endregion
-            #region 将角色乱序，并分配给玩家
-            for (int i = Random.Next(lc.Count); lc.Count != 0; i = Random.Next(lc.Count))
-            {
-                players.Add(new Player(lc[i], this));
-                lc.RemoveAt(i);
-            }
-            #endregion
-            #region 通知玩家身份以及顺序
-            //生成通知内容
-            throw new NotImplementedException();
-            #endregion
-        }
-        private void EndFirstDay()
-        {
-
-        }
-        private void FirstNight()
-        {
-
-        }
-
-        private void EndFirstNight()
-        {
-
-        }
-        private void Day()
-        {
-
-        }
-        private void EndDay()
-        {
-
-        }
-        private void Night()
-        {
-
-        }
-        private void EndNight()
-        {
-
-        }
-        private void Ending()
-        {
-
-        }
-
-        #endregion
 
         #endregion
 
@@ -185,6 +148,7 @@ namespace ThreeBodyGame
         {
             NowProcess = Process.Preparing;
             players = new List<Player>();
+            history = new List<Notice>();
         }
 
         /// <summary>
@@ -231,6 +195,42 @@ namespace ThreeBodyGame
 
         #region Send
         /// <summary>
+        /// 制作消息内容的工厂。
+        /// </summary>
+        /// <param name="contant">通知内容</param>
+        /// <param name="type">通知种类</param>
+        /// <param name="detail">通知对象</param>
+        /// <param name="receiver">接受者，如空则为全体消息。</param>
+        /// <param name="receiver">接受者的类型，默认为角色。</param>
+        public Notice NoticeMaker(string contant, string type, Object detail, string receiver = null,
+                         Notice.ReceiverTypes receiverType = Notice.ReceiverTypes.Charater)
+        {
+            Notice n;
+            if (receiverType == Notice.ReceiverTypes.System)
+                n = Notice.SystemNoticeFactory(contant, type, detail);
+
+            else if (receiver == null || receiverType == Notice.ReceiverTypes.All)
+                n = Notice.AllNoticeFactory(contant, type, detail);
+
+            else if (receiverType == Notice.ReceiverTypes.Charater)
+                n = Notice.CharacterNoticeFactory(receiver, contant, type, detail);
+
+            else if (receiverType == Notice.ReceiverTypes.Camp)
+                n = Notice.CampNoticeFactory(receiver, contant, type, detail);
+
+            else if (receiverType == Notice.ReceiverTypes.Group)
+                n = Notice.GroupNoticeFactory(receiver, contant, type, detail);
+
+            else if (receiverType == Notice.ReceiverTypes.Location)
+                n = Notice.LocationNoticeFactory(receiver, contant, type, detail);
+
+            else if (receiverType == Notice.ReceiverTypes.Player)
+                n = Notice.PlayerNoticeFactory(int.Parse(receiver), contant, type, detail);
+            else throw new NotImplementedException();
+            return n;
+        }
+
+        /// <summary>
         /// 向某人/全员发送信息（通知）。
         /// </summary>
         /// <param name="contant">通知内容</param>
@@ -241,34 +241,19 @@ namespace ThreeBodyGame
         public void SendTo(string contant, string type, Object detail, string receiver = null, 
                          Notice.ReceiverTypes receiverType = Notice.ReceiverTypes.Charater)
         {
-            if(receiverType == Notice.ReceiverTypes.System)
-                this.Noticed.Invoke(this, new Director.NoticedEventArgs
-                    (Notice.SystemNoticeFactory(contant, type, detail)));
+            Notice n = NoticeMaker(contant, type, detail, receiver, receiverType);
+            SendTo(n);
 
-            else if (receiver == null || receiverType == Notice.ReceiverTypes.All)
-                this.Noticed.Invoke(this, new Director.NoticedEventArgs
-                    (Notice.AllNoticeFactory(contant, type, detail)));
-
-            else if(receiverType == Notice.ReceiverTypes.Charater)
-                this.Noticed.Invoke(this, new Director.NoticedEventArgs
-                    (Notice.CharacterNoticeFactory(receiver, contant, type, detail)));
-
-            else if (receiverType == Notice.ReceiverTypes.Camp)
-                this.Noticed.Invoke(this, new Director.NoticedEventArgs
-                    (Notice.CampNoticeFactory(receiver, contant, type, detail)));
-
-            else if (receiverType == Notice.ReceiverTypes.Group)
-                this.Noticed.Invoke(this, new Director.NoticedEventArgs
-                    (Notice.GroupNoticeFactory(receiver, contant, type, detail)));
-
-            else if (receiverType == Notice.ReceiverTypes.Location)
-                this.Noticed.Invoke(this, new Director.NoticedEventArgs
-                    (Notice.LocationNoticeFactory(receiver, contant, type, detail)));
-
-            else if (receiverType == Notice.ReceiverTypes.Player)
-                this.Noticed.Invoke(this, new Director.NoticedEventArgs
-                    (Notice.PlayerNoticeFactory(int.Parse(receiver), contant, type, detail)));
-
+        }
+        /// <summary>
+        /// 以通知方式，向某人/全员发送信息（通知）。
+        /// </summary>
+        /// <param name="notice"></param>
+        public void SendTo(Notice notice)
+        {
+            //将该条通知加入历史记录
+            history.Add(notice);
+            this.Noticed.Invoke(this, new Director.NoticedEventArgs(notice));
         }
         #endregion
 
@@ -320,6 +305,117 @@ namespace ThreeBodyGame
         {
             waitingList = new List<Behavior>();
         }
+
+        /// <summary>
+        /// 把该信息加入发送队列，等待统一发送。
+        /// </summary>
+        /// <param name="contant">通知内容</param>
+        /// <param name="type">通知种类</param>
+        /// <param name="detail">通知对象</param>
+        /// <param name="receiver">接受者，如空则为全体消息。</param>
+        /// <param name="receiver">接受者的类型，默认为角色。</param>
+        internal void SendLater(string contant, string type, Object detail, string receiver = null,
+                         Notice.ReceiverTypes receiverType = Notice.ReceiverTypes.Charater)
+        {
+            Notice n = NoticeMaker(contant, type, detail, receiver, receiverType);
+            sendList.Add(n);
+        }
+        /// <summary>
+        /// 将待发送队列中的内容全部发送，并将其清空。
+        /// </summary>
+        internal void PushSendList()
+        {
+            foreach(var n in sendList)
+            {
+                SendTo(n);
+            }
+            sendList = new List<Notice>();
+        }
+        #endregion
+
+        #region 私有方法
+        #region 进程控制队列
+        private void Preparing()
+        {
+            SendTo("游戏开始准备。", "阶段变更通知", new ProcessNotice(Process.Preparing));
+        }
+
+        private void EndPreparing()
+        {
+
+        }
+
+        private void FirstDay()
+        {
+            //设为第一轮
+            Round = 1;
+            //通知阶段开始
+            SendTo("游戏进入首日，开始进行身份分配。", "阶段变更通知", new ProcessNotice(Process.FirstDay));
+            //添加刘慈欣到0号位占位
+            players.Add(new Player(CharacterFactory.刘慈欣(), this));
+            #region 将string转换为对应角色
+            List<string> ls = GameMode.GetCharacter();
+            List<Character> lc = new List<Character>();
+            ls.ForEach(i => lc.Add(CharacterFactory.GetCharacter(i)));
+            #endregion
+            #region 将角色乱序，并分配给玩家
+            for (int i = Random.Next(lc.Count); lc.Count != 0; i = Random.Next(lc.Count))
+            {
+                players.Add(new Player(lc[i], this));
+                lc.RemoveAt(i);
+            }
+            #endregion
+            #region 通知玩家身份以及顺序
+            //生成通知内容
+            throw new NotImplementedException();
+            #endregion
+        }
+        private void EndFirstDay()
+        {
+
+        }
+        private void FirstNight()
+        {
+            //通知阶段开始
+            SendTo("首夜将至，浓郁夜色中暗流涌动。", "阶段变更通知", new ProcessNotice(Process.FirstNight));
+            //将规定的询问单注入游戏
+            //将询问单转化为具体类
+            throw new NotImplementedException();
+        }
+
+        private void EndFirstNight()
+        {
+
+        }
+        private void Day()
+        {
+            //变更回合数
+            Round++;
+            //通知阶段开始
+            SendTo("朝晖再起，第" + Round + "个清晨来临了。", "阶段变更通知", new ProcessNotice(Process.Day));
+            //通知前夜积压的消息
+            PushSendList();
+        }
+        private void EndDay()
+        {
+        }
+        private void Night()
+        {
+            //通知阶段开始
+            SendTo("夜色漫漫，时间仿佛已经停滞，你在忐忑不安中入眠。", "阶段变更通知", new ProcessNotice(Process.Night));
+
+        }
+        private void EndNight()
+        {
+
+        }
+        private void Ending()
+        {
+            //通知游戏结束
+            SendTo("本局游戏结束！", "阶段变更通知", new ProcessNotice(Process.Ending));
+        }
+
+        #endregion
         #endregion
 
         #region 异常
