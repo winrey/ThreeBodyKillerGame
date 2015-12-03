@@ -380,6 +380,7 @@ namespace ThreeBodyGame
             SendTo("首夜将至，浓郁夜色中暗流涌动。", "阶段变更通知", new ProcessNotice(Process.FirstNight));
             //将规定的询问单注入游戏
             //将询问单转化为具体类
+                  //实现方式大概是，先用反射查找同名类，然后判断其是否派生自Behavior。这个明天单写个方法吧。
             throw new NotImplementedException();
         }
 
