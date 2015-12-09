@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using ThreeBodyGame.Behaviors;
 
 namespace ThreeBodyGame
 {
@@ -282,7 +284,19 @@ namespace ThreeBodyGame
             }
             return NowProcess;
         }
-
+        public bool CanNext()
+        {
+            switch (NowProcess)
+            {
+                case Process.Preparing: return true;
+                case Process.FirstDay: return CanEndDay();
+                case Process.FirstNight: return CanEndNight();
+                case Process.Day: return CanEndDay();
+                case Process.Night: return CanEndNight();
+                case Process.Ending: return false;
+            }
+            return false;
+        }
 
         #endregion
 
@@ -379,9 +393,25 @@ namespace ThreeBodyGame
             //通知阶段开始
             SendTo("首夜将至，浓郁夜色中暗流涌动。", "阶段变更通知", new ProcessNotice(Process.FirstNight));
             //将规定的询问单注入游戏
-            //将询问单转化为具体类
-                  //实现方式大概是，先用反射查找同名类，然后判断其是否派生自Behavior。这个明天单写个方法吧。
-            throw new NotImplementedException();
+            //将GameMode中的询问单转化为具体类
+                  //实现方式大概是，先用反射查找同名类，然后判断其是否派生自Behavior。
+            foreach(var s in GameMode.FirstNight)
+            {
+                var b = CreateBehavior(s);
+                if (b != default(Behavior))
+                {
+                    waitingList.Add(b);
+                }
+                else
+                {
+                    throw new CannotFindBehaviorException();
+                }
+            }
+            //发送问询
+            foreach (var b in waitingList)
+            {
+                b.PreDo();
+            }
         }
 
         private void EndFirstNight()
@@ -397,6 +427,10 @@ namespace ThreeBodyGame
             //通知前夜积压的消息
             PushSendList();
         }
+        private bool CanEndDay()
+        {
+            throw new NotImplementedException();
+        }
         private void EndDay()
         {
         }
@@ -405,6 +439,21 @@ namespace ThreeBodyGame
             //通知阶段开始
             SendTo("夜色漫漫，时间仿佛已经停滞，你在忐忑不安中入眠。", "阶段变更通知", new ProcessNotice(Process.Night));
 
+        }
+        /// <summary>
+        /// 检测该夜是否可以结束。
+        /// </summary>
+        /// <returns></returns>
+        private bool CanEndNight()
+        {
+            foreach(var b in waitingList)
+            {
+                if (b.IsChoiceLegal == false)
+                {
+                    return false;
+                }
+            }
+            return true;
         }
         private void EndNight()
         {
@@ -417,6 +466,26 @@ namespace ThreeBodyGame
         }
 
         #endregion
+        /// <summary>
+        /// 这个方法搜索的内容都在Behaviors下，所以Behavior应处于该命名空间。
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        private Behavior CreateBehavior(string name)
+        {
+            try
+            {
+                string fullName = "ThreeBodyGame.Behaviors." +  name;//命名空间.类型名
+                //此为第一种写法
+                Behavior ect = (Behavior) Assembly.Load(this.GetType().Assembly.FullName).CreateInstance(fullName);
+                return ect;
+            }
+            catch
+            {
+                //发生异常，返回类型的默认值
+                return default(Behavior);
+            }
+        }
         #endregion
 
         #region 异常
@@ -424,6 +493,14 @@ namespace ThreeBodyGame
         {
             public CannotNextException()
                 :base("无法执行下一阶段。可能是因为存在操作未完成或该局已为Ending状态。")
+            {
+
+            }
+        }
+        public class CannotFindBehaviorException : Exception
+        {
+            public CannotFindBehaviorException()
+                : base("无法找到对应角色角色行为！")
             {
 
             }

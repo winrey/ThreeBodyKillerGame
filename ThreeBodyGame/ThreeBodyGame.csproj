@@ -46,6 +46,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Behavior\Notice\NoticeOnly.cs" />
     <Compile Include="Enum\Enums.cs" />
     <Compile Include="GameDirector\Director.cs" />
     <Compile Include="Behavior\Behavior.cs" />
@@ -65,6 +66,7 @@
     <Compile Include="Player\Player.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Vote\Vote.cs" />
     <EmbeddedResource Include="HostAssisant.resx">
       <DependentUpon>HostAssisant.cs</DependentUpon>
     </EmbeddedResource>
@@ -92,7 +94,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Behavior\Character\逻辑\" />
-    <Folder Include="Behavior\Notice\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Notice\Notice种类说明.txt" />

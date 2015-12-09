@@ -5,10 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ThreeBodyGame
+namespace ThreeBodyGame.Behaviors
 {
     /// <summary>
-    /// 一切问询/通知行为继承该类。
+    /// 一切问询/通知行为继承该类。所有子类都要在Behavior命名空间下，不然无法搜索。
     /// </summary>
     public class Behavior
     {
@@ -21,9 +21,9 @@ namespace ThreeBodyGame
         /// </summary>
         public bool HasChosen { get; private set; }
         /// <summary>
-        /// 判断选择是否合法。
+        /// 判断选择是否合法。将用此项作为依据判断该选择是否完成。
         /// </summary>
-        public bool IsChoiceLegal
+        public virtual bool IsChoiceLegal
         {
             get
             {
@@ -35,11 +35,11 @@ namespace ThreeBodyGame
         /// <summary>
         /// 被问询者。也仅有该人和刘慈欣有权限做出回答。刘慈欣回答一般是掉线等情况。
         /// </summary>
-        public string Receiver { get; private set; }
+        public string Receiver { get; protected set; }
         /// <summary>
         /// 记录向用户首次发送的内容。为空则为不发送。
         /// </summary>
-        public string Contant { get; private set; }
+        public string Content { get; protected set; }
         /// <summary>
         /// 记录/查询做出的选择。会检查选择是否有效。
         /// </summary>
@@ -166,10 +166,10 @@ namespace ThreeBodyGame
         /// <summary>
         /// 该方法在询问前做的事。默认为仅发送问询语。
         /// </summary>
-        protected virtual void PreDo()
+        public virtual void PreDo()
         {
-            if (Contant == "") return;
-            director.SendTo(Contant, "纯消息", null, Receiver);
+            if (Content == "") return;
+            director.SendTo(Content, "纯消息", null, Receiver);
         }
         /// <summary>
         /// 该方法在Action后无论选择如何一定会完成的方法，手动销毁可选择是否完成该方法。如不覆写则为空。

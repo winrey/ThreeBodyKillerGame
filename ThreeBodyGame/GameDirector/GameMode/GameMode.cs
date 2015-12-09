@@ -55,10 +55,14 @@ namespace ThreeBodyGame
         /// <summary>
         /// 使用人物生成游戏。注意人物不包含刘慈欣！！！
         /// </summary>
-        /// <param name="characters"></param>
-        public GameMode(string[] characters)
+        /// <param name="characters">该场游戏会分配的角色。</param>
+        /// <param name="firstNight">该场游戏首夜会安排的流程。</param>
+        /// <param name="night">该场游戏普通夜晚会安排的流程。</param>
+        public GameMode(string[] characters, string[] firstNight, string[] night)
         {
             this.characters = new List<string>(characters);
+            this.firstNight = new List<string>(firstNight);
+            this.night = new List<string>(night);
         }
         /// <summary>
         /// 得到一份场上角色清单的克隆。

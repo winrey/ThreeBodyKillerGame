@@ -19,7 +19,7 @@ namespace ThreeBodyGame
 
         private void HostAssisant_Load(object sender, EventArgs e)
         {
-            //Console.WriteLine(Charater.Camps.Human.ToString());
+            //Console.WriteLine(default(Behavior).ToString());
         }
     }
 }
